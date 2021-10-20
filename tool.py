@@ -64,7 +64,7 @@ def execute(img, i):
     print('Draw the mask first')
     while True:
         t = tempimg.copy()
-        t[:, :, 0] = mask
+        t[:, :, 0][mask == 255] = mask[mask == 255]
         k = showImg(t, callback = grabcutCallback)
 
         if k == ord('e'):
@@ -88,7 +88,7 @@ def execute(img, i):
         finalmask = drawmask.copy()
         finalmask[mask == 0] = 0
         tempimg[:, :, 1][finalmask != 0] = 255
-        tempimg[:, :, 1][finalmask == 0] = img[:, :, 1][finalmask == 0]
+        # tempimg[:, :, 1][finalmask == 0] = img[:, :, 1][finalmask == 0]
         
         k = showImg(tempshow, callback= drawcallback)
         if k == ord('e'):
@@ -100,19 +100,20 @@ def execute(img, i):
             return
         elif k == ord('r'):
             if drawsize > 5:
-                drawsize = 5
+                drawsize = 3
             else:
                 drawsize = 10
     cv2.imwrite(f'annotated/image/img_{i}.png', img)
-    cv2.imwrite(f'annotated/mask/mask_{i}.png', finalmask)
+    cv2.imwrite(f'annotated/plantmask/mask_{i}.png', mask)
+    cv2.imwrite(f'annotated/stemmask/mask_{i}.png', finalmask)
 
 
-for i, path in enumerate(glob.glob(r'E:\Google Drive\Acads\Mitacs\dataset\images\indoor/*.jpg', recursive= True)):
+for i, path in enumerate(glob.glob(r'E:\Google Drive\Acads\Mitacs\dataset\Cam 202106\A1-4/*.jpg', recursive= True)):
     ima = cv2.imread(path)
     h, w, _ = ima.shape
-    # leftFrame = ima[:, :w//2]
+    ima = ima[:, :w//2]
     # rightFrame = ima[:, w//2:]
-    ima = cv2.resize(ima, (0, 0), fx=0.2, fy=0.2) 
+    # ima = cv2.resize(ima, (0, 0), fx=0.2, fy=0.2) 
     
     drawsize = 30
 
@@ -121,5 +122,5 @@ for i, path in enumerate(glob.glob(r'E:\Google Drive\Acads\Mitacs\dataset\images
     tempimg = im.copy()
     tempshow = im.copy()
     mask = drawmask.copy()
-    execute(im, i + 61)
+    execute(im, i + 31)
 

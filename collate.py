@@ -13,8 +13,10 @@ def scaleAndShow(im, name = 'outdoor', height = None, waitkey = 1):
         width = int(im.shape[1]*height/im.shape[0])
         im = cv2.resize(im, (width, height), interpolation= cv2.INTER_NEAREST)
     cv2.imshow(name, im)
-    if cv2.waitKey(waitkey) == ord('q'):
+    k = cv2.waitKey(waitkey)
+    if k == ord('q'):
         exit()
+    return k
 
 
 

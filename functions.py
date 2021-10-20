@@ -8,42 +8,20 @@ from skimage import exposure
 from skimage import feature
 import scipy.ndimage as ndi
 
-def removeBranches(skeleton):
-    selems = list()
-    selems.append(np.array([[0, 1, 0], [1, 1, 1], [0, 0, 0]]))
-    selems.append(np.array([[1, 0, 1], [0, 1, 0], [1, 0, 0]]))
-    selems.append(np.array([[1, 0, 1], [0, 1, 0], [0, 1, 0]]))
-    selems.append(np.array([[0, 1, 0], [1, 1, 0], [0, 0, 1]]))
-    selems.append(np.array([[0, 0, 1], [1, 1, 1], [0, 1, 0]]))
-    selems += [np.rot90(selems[i], k=j) for i in range(5) for j in range(4)]
 
-    selems.append(np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]]))
-    selems.append(np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]]))
-
-    branches = np.zeros_like(skeleton, dtype=bool)
-    for selem in selems:
-        branches |= ndi.binary_hit_or_miss(skeleton, selem)
-    skeleton = skeleton.astype(np.uint8)*255
-    branches = branches.astype(np.uint8)*255
-    y, x = np.where(branches == 255)
-    for p in list(zip(x, y)):
-        cv2.circle(skeleton, p, 3, 0, -1)
-    # skeleton[branches == 255] = 0
-
-    return skeleton, list(zip(x, y))
-
-
-
-def hog(image):
-    (H, hogImage) = feature.hog(
-        image, orientations=9, pixels_per_cell=(8, 8),
-        cells_per_block=(2, 2), transform_sqrt=True, block_norm="L1",
-        visualize=True
-    )
-    hogImage = exposure.rescale_intensity(hogImage, out_range=(0, 255))
-    hogImage = hogImage.astype("uint8")
-    return H
-
+def scaleAndShow(im, name = 'outdoor', height = None, waitkey = 1):
+    def callback(event,x,y,flags,param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            print(x, y, im[y, x])
+    
+    cv2.namedWindow(name)
+    cv2.setMouseCallback(name,callback)
+    if height is not None:
+        width = int(im.shape[1]*height/im.shape[0])
+        im = cv2.resize(im, (width, height), interpolation= cv2.INTER_NEAREST)
+    cv2.imshow(name, im)
+    if cv2.waitKey(waitkey) == ord('q'):
+        exit()
 
 
 def getWindow(mask, point, winsize):
@@ -56,7 +34,6 @@ def getWindow(mask, point, winsize):
 
 def sampleGrid(mask, step = 5, viz = True):
     h, w = mask.shape
-    print('Gridding', mask.shape)
 
     x = np.arange(0, w - 1, step).astype(int)
     y = np.arange(0, h - 1, step).astype(int)
@@ -102,45 +79,9 @@ def grabcut(image, mask):
 
     return grabcutmask
 
-
-def sobel(img):
-    xKernel = np.array([[-1,0,1],[-2,0,2],[-1,0,1]])
-    yKernel = np.array([[-1,-2,-1],[0,0,0],[1,2,1]])
-    sobelled = np.zeros((img.shape[0]-2, img.shape[1]-2, 3), dtype="uint8")
-    @jit(nopython = True)
-    def help(img, sobelled, xKernel, yKernel):
-        for y in range(1, img.shape[0]-1):
-            for x in range(1, img.shape[1]-1):
-                gx = np.sum(np.multiply(img[y-1:y+2, x-1:x+2], xKernel))
-                gy = np.sum(np.multiply(img[y-1:y+2, x-1:x+2], yKernel))
-                g = abs(gx) + abs(gy) #math.sqrt(gx ** 2 + gy ** 2) (Slower)
-                g = g if g > 0 and g < 255 else (0 if g < 0 else 255)
-                sobelled[y-1][x-2] = g
-
-        
-        return sobelled
-
-    sobelled = help(img, sobelled, xKernel, yKernel)
-    sobelled = abs(sobelled)
-    sobelled -= sobelled.min()
-    return sobelled
-
-
-
-def cannyfilt(image):
-    canny = cv2.Canny(image, 800, 1000)
-    return canny
-
 def threshold(image, lg = np.array([ 30, 40, 40]), ug = np.array([ 86, 255,255])):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     mask = cv2.inRange(hsv, lg, ug)
 
     return mask
-
-
-def skeletonize(mask):
-    mask[mask == 255] = 1
-    skeleton = sk(mask)
-
-    return skeleton
