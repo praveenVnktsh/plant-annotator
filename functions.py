@@ -47,6 +47,7 @@ def sampleGrid(mask, step = 5, viz = True):
     if viz:
         temp = mask.copy()
         temp[indices] = 128
+        scaleAndShow(temp, 'a')
     y, x = np.where(indices == True)
     return x, y, indices
 
