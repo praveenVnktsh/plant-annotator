@@ -8,7 +8,7 @@ from glob import glob
 k = 0
 windowsize = 50
 hwinsize=  windowsize//2
-buffer = [[], [], []]
+buffer = []
 # image, mask, stemmask
 
 stepsize = 10
@@ -46,9 +46,8 @@ for i in range(100):
         # scaleAndShow(imgwindow, 'a', waitkey=1)
         # scaleAndShow(plantwindow, 'b', waitkey=1)
         # scaleAndShow(stemwindow, 'c', waitkey=1)
-        buffer[0].append(imgwindow)
-        buffer[1].append(plantwindow)
-        buffer[2].append(stemwindow)
+        t = [imgwindow, plantwindow, stemwindow]
+        buffer.append(t)
         k += 1
 
 
@@ -72,12 +71,11 @@ for i in range(100):
             if stemwindow.shape != (windowsize + 1, windowsize + 1):
                 print('continue stem', stemwindow.shape)
                 continue
-            buffer[0].append(imgwindow)
-            buffer[1].append(plantwindow)
-            buffer[2].append(stemwindow)
+            t = [imgwindow, plantwindow, stemwindow]
+            buffer.append(t)
             i += 1
         except:
             continue
             
-    print(len(buffer[0]))
+    print(len(buffer))
 torch.save(buffer, 'dataset.pt')
